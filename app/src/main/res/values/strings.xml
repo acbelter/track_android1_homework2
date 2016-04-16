@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">HomeWork2</string>
+    <string name="error_load_data">Unable to load data from server</string>
+    <string name="error_connection">Unable to connect to server</string>
+    <string name="error_io">Unable to read data from server</string>
+    <string name="error_json">Unable to parse data from server</string>
+</resources>
