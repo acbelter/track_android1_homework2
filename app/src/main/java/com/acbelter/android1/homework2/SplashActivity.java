@@ -1,5 +1,6 @@
 package com.acbelter.android1.homework2;
 
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -58,7 +59,9 @@ public class SplashActivity extends AppCompatActivity implements DataLoadingList
 
     @Override
     public void onDataLoaded() {
-
+        Intent intent = new Intent(SplashActivity.this, MainActivity.class);
+        startActivity(intent);
+        finish();
     }
 
     @Override
@@ -100,7 +103,7 @@ public class SplashActivity extends AppCompatActivity implements DataLoadingList
                 String data = readInputStream(is);
                 is.close();
 
-                List<TechnologyItem> items = TechnologyParser.parse(data);
+                List<TechItem> items = TechParser.parse(data);
                 DbHelper dbHelper = MainApplication.getDbHelper();
                 dbHelper.deleteTechnologies();
                 dbHelper.insertTechnologies(items);

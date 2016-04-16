@@ -1,6 +1,6 @@
 package com.acbelter.android1.homework2;
 
-public class TechnologyItem {
+public class TechItem {
     public int id;
     public String picture;
     public String title;
@@ -14,7 +14,7 @@ public class TechnologyItem {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        TechnologyItem that = (TechnologyItem) o;
+        TechItem that = (TechItem) o;
         return id == that.id;
     }
 
@@ -25,7 +25,7 @@ public class TechnologyItem {
 
     @Override
     public String toString() {
-        return "TechnologyItem{" +
+        return "TechItem{" +
                 "id=" + id +
                 ", title='" + title + '\'' +
                 '}';

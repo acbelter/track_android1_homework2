@@ -7,18 +7,18 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class TechnologyParser {
-    public static List<TechnologyItem> parse(String data) throws JSONException {
+public class TechParser {
+    public static List<TechItem> parse(String data) throws JSONException {
         if (data == null) {
             return new ArrayList<>(0);
         }
 
         JSONObject techJson = new JSONObject(data).getJSONObject("technology");
-        List<TechnologyItem> result = new ArrayList<>();
+        List<TechItem> result = new ArrayList<>();
         Iterator<String> idIterator = techJson.keys();
         while (idIterator.hasNext()) {
             JSONObject techObj = techJson.getJSONObject(idIterator.next());
-            TechnologyItem techItem = new TechnologyItem();
+            TechItem techItem = new TechItem();
             techItem.id = techObj.getInt("id");
             techItem.picture = techObj.getString("picture");
             techItem.title = techObj.getString("title");

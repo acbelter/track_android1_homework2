@@ -2,22 +2,24 @@ package com.acbelter.android1.homework2.db;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import com.acbelter.android1.homework2.TechnologyItem;
+import com.acbelter.android1.homework2.TechItem;
 
 import java.util.List;
 
 public class DbHelper extends SQLiteOpenHelper {
     private static final int DB_VERSION = 1;
     private static final String DB_NAME = "evo_db";
-    private static final String TABLE_TECHNOLOGY = "technology";
 
-    private static final String KEY_ID = "id";
-    private static final String KEY_PICTURE = "picture";
-    private static final String KEY_TITLE = "title";
-    private static final String KEY_INFO = "info";
+    public static final String TABLE_TECHNOLOGY = "technology";
+
+    public static final String COLUMN_ID = "id";
+    public static final String COLUMN_PICTURE = "picture";
+    public static final String COLUMN_TITLE = "title";
+    public static final String COLUMN_INFO = "info";
 
     public DbHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
@@ -26,10 +28,11 @@ public class DbHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         String createQuery = "CREATE TABLE " + TABLE_TECHNOLOGY + "("
-                + KEY_ID + " INTEGER PRIMARY KEY,"
-                + KEY_PICTURE + " TEXT,"
-                + KEY_TITLE + " TEXT,"
-                + KEY_INFO + " TEXT)";
+                + "_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                + COLUMN_ID + " INTEGER,"
+                + COLUMN_PICTURE + " TEXT,"
+                + COLUMN_TITLE + " TEXT,"
+                + COLUMN_INFO + " TEXT)";
         db.execSQL(createQuery);
     }
 
@@ -39,17 +42,22 @@ public class DbHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    public void insertTechnologies(List<TechnologyItem> items) {
+    public void insertTechnologies(List<TechItem> items) {
         SQLiteDatabase db = getWritableDatabase();
-        for (TechnologyItem item : items) {
+        for (TechItem item : items) {
             ContentValues values = new ContentValues();
-            values.put(KEY_ID, item.id);
-            values.put(KEY_PICTURE, item.picture);
-            values.put(KEY_TITLE, item.title);
-            values.put(KEY_INFO, item.info);
+            values.put(COLUMN_ID, item.id);
+            values.put(COLUMN_PICTURE, item.picture);
+            values.put(COLUMN_TITLE, item.title);
+            values.put(COLUMN_INFO, item.info);
             db.insert(TABLE_TECHNOLOGY, null, values);
         }
         db.close();
+    }
+
+    public Cursor getTechnologies() {
+        SQLiteDatabase db = getReadableDatabase();
+        return db.query(TABLE_TECHNOLOGY, null, null, null, null, null, null, null);
     }
 
     public void deleteTechnologies() {
