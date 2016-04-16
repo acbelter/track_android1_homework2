@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
+import com.acbelter.android1.homework2.db.DbHelper;
+
 import org.json.JSONException;
 
 import java.io.BufferedInputStream;
@@ -99,6 +101,9 @@ public class SplashActivity extends AppCompatActivity implements DataLoadingList
                 is.close();
 
                 List<TechnologyItem> items = TechnologyParser.parse(data);
+                DbHelper dbHelper = MainApplication.getDbHelper();
+                dbHelper.deleteTechnologies();
+                dbHelper.insertTechnologies(items);
 
                 return true;
             } catch (MalformedURLException e) {
