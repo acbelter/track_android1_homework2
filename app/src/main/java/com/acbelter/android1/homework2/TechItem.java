@@ -7,7 +7,7 @@ public class TechItem {
     public String info;
 
     public String getPictureUrl() {
-        return Api.BASE_URL + picture;
+        return picture != null ? Api.BASE_URL + picture : null;
     }
 
     @Override

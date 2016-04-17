@@ -21,6 +21,11 @@ public class DbHelper extends SQLiteOpenHelper {
     public static final String COLUMN_TITLE = "title";
     public static final String COLUMN_INFO = "info";
 
+    public static final int INDEX_ID = 1;
+    public static final int INDEX_PICTURE = 2;
+    public static final int INDEX_TITLE = 3;
+    public static final int INDEX_INFO = 4;
+
     public DbHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
     }

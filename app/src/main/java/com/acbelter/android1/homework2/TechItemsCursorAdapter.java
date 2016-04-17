@@ -12,10 +12,12 @@ import android.widget.TextView;
 import com.acbelter.android1.homework2.db.DbHelper;
 
 public class TechItemsCursorAdapter extends CursorAdapter {
+    private ImageLoader mImageLoader;
     private LayoutInflater mInflater;
 
     public TechItemsCursorAdapter(Context context, Cursor cursor) {
         super(context, cursor, 0);
+        mImageLoader = new ImageLoader(context, R.drawable.ic_settings_black_48dp);
         mInflater = LayoutInflater.from(context);
     }
 
@@ -37,7 +39,8 @@ public class TechItemsCursorAdapter extends CursorAdapter {
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
         final ViewHolder holder = (ViewHolder) view.getTag();
-        int titleIndex = cursor.getColumnIndex(DbHelper.COLUMN_TITLE);
-        holder.title.setText(cursor.getString(titleIndex));
+        holder.title.setText(cursor.getString(DbHelper.INDEX_TITLE));
+        String pictureUrl = cursor.getString(DbHelper.INDEX_PICTURE);
+        mImageLoader.loadImage(Api.BASE_URL + pictureUrl, holder.preview);
     }
 }

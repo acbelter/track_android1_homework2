@@ -11,12 +11,10 @@ import com.acbelter.android1.homework2.db.DbHelper;
 import org.json.JSONException;
 
 import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 
@@ -69,23 +67,10 @@ public class SplashActivity extends AppCompatActivity implements DataLoadingList
         Toast.makeText(getApplicationContext(), errorResId, Toast.LENGTH_LONG).show();
     }
 
-    protected static String readInputStream(InputStream is) throws IOException {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        int read;
-        byte[] data = new byte[16384];
-
-        while ((read = is.read(data, 0, data.length)) != -1) {
-            outputStream.write(data, 0, read);
-        }
-
-        outputStream.flush();
-        return outputStream.toString("utf-8");
-    }
-
 
     private static class LoadDataTask extends AsyncTask<Void, Void, Boolean> {
         private WeakReference<DataLoadingListener> mListenerWeakRef;
-        private int mErrorResId = R.string.error_load_data;
+        private int mErrorResId = R.string.error_load;
 
         LoadDataTask(DataLoadingListener listener) {
             mListenerWeakRef = new WeakReference<>(listener);
@@ -99,9 +84,9 @@ public class SplashActivity extends AppCompatActivity implements DataLoadingList
                 conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
 
-                InputStream is = new BufferedInputStream(conn.getInputStream());
-                String data = readInputStream(is);
-                is.close();
+                InputStream in = new BufferedInputStream(conn.getInputStream());
+                String data = Utils.readStream(in);
+                in.close();
 
                 List<TechItem> items = TechParser.parse(data);
                 DbHelper dbHelper = MainApplication.getDbHelper();
@@ -109,15 +94,12 @@ public class SplashActivity extends AppCompatActivity implements DataLoadingList
                 dbHelper.insertTechnologies(items);
 
                 return true;
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-                mErrorResId = R.string.error_connection;
             } catch (IOException e) {
                 e.printStackTrace();
-                mErrorResId = R.string.error_io;
+                mErrorResId = R.string.error_read;
             } catch (JSONException e) {
                 e.printStackTrace();
-                mErrorResId = R.string.error_json;
+                mErrorResId = R.string.error_parse;
             } finally {
                 if (conn != null) {
                     conn.disconnect();
