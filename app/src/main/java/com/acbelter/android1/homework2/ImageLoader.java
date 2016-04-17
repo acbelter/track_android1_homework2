@@ -7,7 +7,6 @@ import android.graphics.Canvas;
 import android.graphics.ColorFilter;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.util.LruCache;
@@ -18,6 +17,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -92,17 +92,12 @@ public class ImageLoader {
                 LoadImageTask loadTask = new LoadImageTask(context, url, imageView);
                 ImageStub imageStub = new ImageStub(context, loadTask, mImageStubResId);
                 imageView.setImageDrawable(imageStub);
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-                    loadTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-                } else {
-                    loadTask.execute();
-                }
+                loadTask.execute();
             }
         }
     }
 
-    public static LoadImageTask getLoadImageTask(ImageView imageView) {
+    private static LoadImageTask getLoadImageTask(ImageView imageView) {
         if (imageView != null) {
             Drawable drawable = imageView.getDrawable();
             if (drawable instanceof ImageStub) {
@@ -113,7 +108,7 @@ public class ImageLoader {
         return null;
     }
 
-    public class LoadImageTask extends AsyncTask<Void, Void, Bitmap> {
+    private class LoadImageTask extends AsyncTask<Void, Void, Bitmap> {
         private WeakReference<Context> mContextWeakRef;
         private WeakReference<ImageView> mImageViewWeakRef;
         private String mUrl;
@@ -122,6 +117,10 @@ public class ImageLoader {
             mContextWeakRef = new WeakReference<>(context);
             mImageViewWeakRef = new WeakReference<>(imageView);
             mUrl = url;
+        }
+
+        public String getUrl() {
+            return mUrl;
         }
 
         @Override
@@ -141,9 +140,10 @@ public class ImageLoader {
                         }
 
                         InputStream in = conn.getInputStream();
-                        FileOutputStream out = new FileOutputStream(file);
+                        OutputStream out = new FileOutputStream(file);
                         Utils.copyStream(in, out);
                         out.close();
+
                         bitmap = decodeImageFromFile(file);
                     } else {
                         Log.e("TAG", "Load from file: " + mUrl);
@@ -169,15 +169,12 @@ public class ImageLoader {
                 BitmapFactory.decodeStream(in, null, options);
                 options.inSampleSize = calculateInSampleSize(options, 192, 192);
                 options.inJustDecodeBounds = false;
-                Bitmap bitmap = BitmapFactory.decodeStream(new FileInputStream(file), null, options);
-                return bitmap;
+                return BitmapFactory.decodeStream(new FileInputStream(file), null, options);
             } catch (IOException e) {
                 Log.e(LoadImageTask.class.getSimpleName(), "IOException while decoding image from file", e);
             }
             return null;
-
         }
-
 
         @Override
         protected void onPostExecute(Bitmap bitmap) {
