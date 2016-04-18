@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-public class Utils {
+public class StreamUtils {
     public static void copyStream(InputStream in, OutputStream out) throws IOException {
         byte[] buffer = new byte[8192];
         while (true) {

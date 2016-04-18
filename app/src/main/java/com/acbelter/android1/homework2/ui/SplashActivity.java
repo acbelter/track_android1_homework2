@@ -1,4 +1,4 @@
-package com.acbelter.android1.homework2;
+package com.acbelter.android1.homework2.ui;
 
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -6,6 +6,12 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
+import com.acbelter.android1.homework2.Api;
+import com.acbelter.android1.homework2.MainApplication;
+import com.acbelter.android1.homework2.R;
+import com.acbelter.android1.homework2.StreamUtils;
+import com.acbelter.android1.homework2.TechItem;
+import com.acbelter.android1.homework2.TechParser;
 import com.acbelter.android1.homework2.db.DbHelper;
 
 import org.json.JSONException;
@@ -85,7 +91,7 @@ public class SplashActivity extends AppCompatActivity implements DataLoadingList
                 conn.setRequestMethod("GET");
 
                 InputStream in = new BufferedInputStream(conn.getInputStream());
-                String data = Utils.readStream(in);
+                String data = StreamUtils.readStream(in);
                 in.close();
 
                 List<TechItem> items = TechParser.parse(data);

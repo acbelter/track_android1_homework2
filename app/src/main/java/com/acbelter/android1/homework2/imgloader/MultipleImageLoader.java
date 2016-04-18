@@ -9,7 +9,7 @@ import android.util.Log;
 import android.util.LruCache;
 import android.widget.ImageView;
 
-import com.acbelter.android1.homework2.Utils;
+import com.acbelter.android1.homework2.StreamUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -125,13 +125,10 @@ public class MultipleImageLoader implements ImageLoader {
     }
 
     @Override
-    public void setRequiredSizeDimens(int widthDimenResId, int heightDimenResId) {
-        Context context = mContextWeakRef.get();
-        if (context != null) {
-            mRequiredWidth = (int) context.getResources().getDimension(widthDimenResId);
-            mRequiredHeight = (int) context.getResources().getDimension(heightDimenResId);
-        }
-        Log.d(TAG, "setRequiredSizeDimens: " + mRequiredWidth + "x" + mRequiredHeight);
+    public void setRequiredSize(int width, int height) {
+        mRequiredWidth = width;
+        mRequiredHeight = height;
+        Log.d(TAG, "setRequiredSize: " + mRequiredWidth + "x" + mRequiredHeight);
     }
 
 
@@ -162,7 +159,7 @@ public class MultipleImageLoader implements ImageLoader {
 
                         InputStream in = conn.getInputStream();
                         OutputStream out = new FileOutputStream(file);
-                        Utils.copyStream(in, out);
+                        StreamUtils.copyStream(in, out);
                         out.close();
 
                         bitmap = decodeImageFromFile(file);
