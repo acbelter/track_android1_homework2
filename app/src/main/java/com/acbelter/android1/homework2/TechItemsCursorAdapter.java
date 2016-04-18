@@ -10,6 +10,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.acbelter.android1.homework2.db.DbHelper;
+import com.acbelter.android1.homework2.imgloader.ImageLoader;
+import com.acbelter.android1.homework2.imgloader.MultipleImageLoader;
 
 public class TechItemsCursorAdapter extends CursorAdapter {
     private ImageLoader mImageLoader;
@@ -17,7 +19,7 @@ public class TechItemsCursorAdapter extends CursorAdapter {
 
     public TechItemsCursorAdapter(Context context, Cursor cursor) {
         super(context, cursor, 0);
-        mImageLoader = new ImageLoader(context, R.drawable.ic_settings_black_48dp);
+        mImageLoader = new MultipleImageLoader(context, R.drawable.ic_settings_black_48dp);
         mInflater = LayoutInflater.from(context);
     }
 

@@ -1,16 +1,15 @@
-package com.acbelter.android1.homework2;
+package com.acbelter.android1.homework2.imgloader;
 
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.ColorFilter;
-import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
-import android.support.v4.content.ContextCompat;
+import android.os.Build;
 import android.util.Log;
 import android.util.LruCache;
 import android.widget.ImageView;
+
+import com.acbelter.android1.homework2.Utils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -21,15 +20,25 @@ import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class ImageLoader {
+public class MultipleImageLoader implements ImageLoader {
+    private static final String TAG = MultipleImageLoader.class.getSimpleName();
     private int mImageStubResId;
     private WeakReference<Context> mContextWeakRef;
     private LruCache<String, Bitmap> mMemoryCache;
+    private ConcurrentHashMap<String, LoadImageTask> mTasksMap;
+    private Map<String, Set<WeakReference<ImageView>>> mImageViewsMap;
 
-    public ImageLoader(Context context, int imageStubResId) {
+    public MultipleImageLoader(Context context, int imageStubResId) {
         mImageStubResId = imageStubResId;
         mContextWeakRef = new WeakReference<>(context);
+        mTasksMap = new ConcurrentHashMap<>();
+        mImageViewsMap = new HashMap<>();
         initMemoryCache();
     }
 
@@ -82,45 +91,45 @@ public class ImageLoader {
         return mMemoryCache.get(key);
     }
 
+    @Override
     public void loadImage(String url, ImageView imageView) {
+        if (mImageViewsMap.containsKey(url)) {
+            mImageViewsMap.get(url).add(new WeakReference<>(imageView));
+        } else {
+            Set<WeakReference<ImageView>> newValue = new LinkedHashSet<>();
+            newValue.add(new WeakReference<>(imageView));
+            mImageViewsMap.put(url, newValue);
+        }
+
         Bitmap cachedBitmap = getBitmapFromMemCache(url);
         if (cachedBitmap != null) {
             imageView.setImageBitmap(cachedBitmap);
         } else {
+            imageView.setImageResource(mImageStubResId);
             Context context = mContextWeakRef.get();
             if (context != null) {
-                LoadImageTask loadTask = new LoadImageTask(context, url, imageView);
-                ImageStub imageStub = new ImageStub(context, loadTask, mImageStubResId);
-                imageView.setImageDrawable(imageStub);
-                loadTask.execute();
+                if (!mTasksMap.containsKey(url)) {
+                    LoadImageTask loadTask = new LoadImageTask(context, url);
+                    mTasksMap.put(url, loadTask);
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+                        loadTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                    } else {
+                        loadTask.execute();
+                    }
+                }
             }
         }
     }
 
-    private static LoadImageTask getLoadImageTask(ImageView imageView) {
-        if (imageView != null) {
-            Drawable drawable = imageView.getDrawable();
-            if (drawable instanceof ImageStub) {
-                ImageStub imageStub = (ImageStub) drawable;
-                return imageStub.getLoadTask();
-            }
-        }
-        return null;
-    }
 
     private class LoadImageTask extends AsyncTask<Void, Void, Bitmap> {
         private WeakReference<Context> mContextWeakRef;
-        private WeakReference<ImageView> mImageViewWeakRef;
         private String mUrl;
 
-        public LoadImageTask(Context context, String url, ImageView imageView) {
+        public LoadImageTask(Context context, String url) {
             mContextWeakRef = new WeakReference<>(context);
-            mImageViewWeakRef = new WeakReference<>(imageView);
             mUrl = url;
-        }
-
-        public String getUrl() {
-            return mUrl;
         }
 
         @Override
@@ -132,7 +141,7 @@ public class ImageLoader {
                     File file = new File(context.getCacheDir(), mUrl.replace("/", ""));
                     Bitmap bitmap;
                     if (!file.exists()) {
-                        Log.e("TAG", "Load from net: " + mUrl);
+                        Log.d(TAG, "Load from net: " + mUrl);
                         URL url = new URL(mUrl);
                         conn = (HttpURLConnection) url.openConnection();
                         if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
@@ -146,13 +155,13 @@ public class ImageLoader {
 
                         bitmap = decodeImageFromFile(file);
                     } else {
-                        Log.e("TAG", "Load from file: " + mUrl);
-                        bitmap =  decodeImageFromFile(file);
+                        Log.d(TAG, "Load from file: " + mUrl);
+                        bitmap = decodeImageFromFile(file);
                     }
                     return bitmap;
                 }
             } catch (IOException e) {
-                Log.e(LoadImageTask.class.getSimpleName(), "IOException while downloading image from network", e);
+                Log.e(TAG, "IOException while downloading image from network", e);
             } finally {
                 if (conn != null) {
                     conn.disconnect();
@@ -167,17 +176,19 @@ public class ImageLoader {
                 BitmapFactory.Options options = new BitmapFactory.Options();
                 options.inJustDecodeBounds = true;
                 BitmapFactory.decodeStream(in, null, options);
+                in.close();
                 options.inSampleSize = calculateInSampleSize(options, 192, 192);
                 options.inJustDecodeBounds = false;
                 return BitmapFactory.decodeStream(new FileInputStream(file), null, options);
             } catch (IOException e) {
-                Log.e(LoadImageTask.class.getSimpleName(), "IOException while decoding image from file", e);
+                Log.e(TAG, "IOException while decoding image from file", e);
             }
             return null;
         }
 
         @Override
         protected void onPostExecute(Bitmap bitmap) {
+            mTasksMap.remove(mUrl);
             if (isCancelled()) {
                 bitmap = null;
             }
@@ -188,45 +199,14 @@ public class ImageLoader {
                 cachedBitmap = bitmap;
             }
 
-            ImageView imageView = mImageViewWeakRef.get();
-            if (imageView != null && this == getLoadImageTask(imageView)) {
-                imageView.setImageBitmap(cachedBitmap);
+            Set<WeakReference<ImageView>> imageViews = mImageViewsMap.get(mUrl);
+            for (WeakReference<ImageView> imageViewWekRef : imageViews) {
+                ImageView imageView = imageViewWekRef.get();
+                if (imageView != null) {
+                    imageView.setImageBitmap(cachedBitmap);
+                }
             }
         }
     }
 
-    private static class ImageStub extends Drawable {
-        private WeakReference<LoadImageTask> mLoadTaskWeakRef;
-        private Drawable mDrawable;
-
-        public ImageStub(Context context, LoadImageTask loadTask, int imageResId) {
-            mDrawable = ContextCompat.getDrawable(context, imageResId);
-            mLoadTaskWeakRef = new WeakReference<>(loadTask);
-        }
-
-        public LoadImageTask getLoadTask() {
-            return mLoadTaskWeakRef.get();
-        }
-
-        @Override
-        public void draw(Canvas canvas) {
-            mDrawable.setBounds(canvas.getClipBounds());
-            mDrawable.draw(canvas);
-        }
-
-        @Override
-        public void setAlpha(int alpha) {
-            mDrawable.setAlpha(alpha);
-        }
-
-        @Override
-        public void setColorFilter(ColorFilter colorFilter) {
-            mDrawable.setColorFilter(colorFilter);
-        }
-
-        @Override
-        public int getOpacity() {
-            return mDrawable.getOpacity();
-        }
-    }
 }
