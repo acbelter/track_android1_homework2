@@ -45,6 +45,7 @@ public class TechPagerFragment extends Fragment {
         cursor.moveToPosition(mStartPosition);
         mPagerAdapter = new TechItemsCursorPagerAdapter(getActivity(), getFragmentManager(), cursor);
         mPager.setAdapter(mPagerAdapter);
+        mPager.setCurrentItem(mStartPosition);
     }
 
     public static String tag() {
