@@ -33,6 +33,8 @@ public class MultipleImageLoader implements ImageLoader {
     private LruCache<String, Bitmap> mMemoryCache;
     private ConcurrentHashMap<String, LoadImageTask> mTasksMap;
     private Map<String, Set<WeakReference<ImageView>>> mImageViewsMap;
+    private int mRequiredWidth;
+    private int mRequiredHeight;
 
     public MultipleImageLoader(Context context, int imageStubResId) {
         mImageStubResId = imageStubResId;
@@ -122,6 +124,16 @@ public class MultipleImageLoader implements ImageLoader {
         }
     }
 
+    @Override
+    public void setRequiredSizeDimens(int widthDimenResId, int heightDimenResId) {
+        Context context = mContextWeakRef.get();
+        if (context != null) {
+            mRequiredWidth = (int) context.getResources().getDimension(widthDimenResId);
+            mRequiredHeight = (int) context.getResources().getDimension(heightDimenResId);
+        }
+        Log.d(TAG, "setRequiredSizeDimens: " + mRequiredWidth + "x" + mRequiredHeight);
+    }
+
 
     private class LoadImageTask extends AsyncTask<Void, Void, Bitmap> {
         private WeakReference<Context> mContextWeakRef;
@@ -177,7 +189,7 @@ public class MultipleImageLoader implements ImageLoader {
                 options.inJustDecodeBounds = true;
                 BitmapFactory.decodeStream(in, null, options);
                 in.close();
-                options.inSampleSize = calculateInSampleSize(options, 192, 192);
+                options.inSampleSize = calculateInSampleSize(options, mRequiredWidth, mRequiredHeight);
                 options.inJustDecodeBounds = false;
                 return BitmapFactory.decodeStream(new FileInputStream(file), null, options);
             } catch (IOException e) {

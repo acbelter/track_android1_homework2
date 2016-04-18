@@ -20,6 +20,7 @@ public class TechItemsCursorAdapter extends CursorAdapter {
     public TechItemsCursorAdapter(Context context, Cursor cursor) {
         super(context, cursor, 0);
         mImageLoader = new MultipleImageLoader(context, R.drawable.ic_settings_black_48dp);
+        mImageLoader.setRequiredSizeDimens(R.dimen.preview_image_size, R.dimen.preview_image_size);
         mInflater = LayoutInflater.from(context);
     }
 
