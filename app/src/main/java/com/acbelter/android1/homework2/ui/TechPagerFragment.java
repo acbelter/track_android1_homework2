@@ -16,7 +16,6 @@ import com.acbelter.android1.homework2.db.DbHelper;
 public class TechPagerFragment extends Fragment {
     private int mStartPosition;
     private ViewPager mPager;
-    private TechItemsCursorPagerAdapter mPagerAdapter;
 
     public static TechPagerFragment newInstance(int startPosition) {
         TechPagerFragment fragment = new TechPagerFragment();
@@ -43,8 +42,9 @@ public class TechPagerFragment extends Fragment {
         DbHelper dbHelper = MainApplication.getDbHelper();
         Cursor cursor = dbHelper.getTechnologies();
         cursor.moveToPosition(mStartPosition);
-        mPagerAdapter = new TechItemsCursorPagerAdapter(getActivity(), getFragmentManager(), cursor);
-        mPager.setAdapter(mPagerAdapter);
+        TechItemsCursorPagerAdapter pagerAdapter =
+                new TechItemsCursorPagerAdapter(getActivity(), cursor);
+        mPager.setAdapter(pagerAdapter);
         mPager.setCurrentItem(mStartPosition);
     }
 

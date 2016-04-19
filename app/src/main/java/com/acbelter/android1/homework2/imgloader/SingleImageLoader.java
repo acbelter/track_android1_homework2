@@ -132,10 +132,6 @@ public class SingleImageLoader implements ImageLoader {
             mUrl = url;
         }
 
-        public String getUrl() {
-            return mUrl;
-        }
-
         @Override
         protected Bitmap doInBackground(Void... params) {
             HttpURLConnection conn = null;
@@ -145,6 +141,7 @@ public class SingleImageLoader implements ImageLoader {
                     File file = new File(context.getCacheDir(), mUrl.replace("/", ""));
                     Bitmap bitmap = decodeImageFromFile(file);
                     if (bitmap == null) {
+                        Log.d(TAG, "Load image from network: " + mUrl);
                         URL url = new URL(mUrl);
                         conn = (HttpURLConnection) url.openConnection();
                         if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
@@ -157,6 +154,8 @@ public class SingleImageLoader implements ImageLoader {
                         out.close();
 
                         bitmap = decodeImageFromFile(file);
+                    } else {
+                        Log.d(TAG, "Load image from file: " + mUrl);
                     }
                     return bitmap;
                 }

@@ -30,7 +30,7 @@ public class MultipleImageLoader implements ImageLoader {
     private WeakReference<Context> mContextWeakRef;
     private LruCache<String, Bitmap> mMemoryCache;
     private ConcurrentHashMap<String, LoadImageTask> mTasksMap;
-    private Set<ImageView> mUsedImages;
+    private Set<WeakReference<ImageView>> mUsedImagesWeakRefs;
     private int mRequiredWidth;
     private int mRequiredHeight;
 
@@ -38,7 +38,7 @@ public class MultipleImageLoader implements ImageLoader {
         mImageStubResId = imageStubResId;
         mContextWeakRef = new WeakReference<>(context);
         mTasksMap = new ConcurrentHashMap<>();
-        mUsedImages = new HashSet<>();
+        mUsedImagesWeakRefs = new HashSet<>();
         initMemoryCache();
     }
 
@@ -94,7 +94,7 @@ public class MultipleImageLoader implements ImageLoader {
     @Override
     public void loadImage(String url, ImageView imageView) {
         imageView.setTag(url);
-        mUsedImages.add(imageView);
+        mUsedImagesWeakRefs.add(new WeakReference<>(imageView));
 
         Bitmap cachedBitmap = getBitmapFromMemCache(url);
         if (cachedBitmap != null) {
@@ -143,6 +143,7 @@ public class MultipleImageLoader implements ImageLoader {
                     File file = new File(context.getCacheDir(), mUrl.replace("/", ""));
                     Bitmap bitmap = decodeImageFromFile(file);
                     if (bitmap == null) {
+                        Log.d(TAG, "Load image from network: " + mUrl);
                         URL url = new URL(mUrl);
                         conn = (HttpURLConnection) url.openConnection();
                         if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
@@ -155,6 +156,8 @@ public class MultipleImageLoader implements ImageLoader {
                         out.close();
 
                         bitmap = decodeImageFromFile(file);
+                    } else {
+                        Log.d(TAG, "Load image from file: " + mUrl);
                     }
                     return bitmap;
                 }
@@ -197,8 +200,9 @@ public class MultipleImageLoader implements ImageLoader {
                 cachedBitmap = bitmap;
             }
 
-            for (ImageView imageView : mUsedImages) {
-                if (imageView.getTag().equals(mUrl)) {
+            for (WeakReference<ImageView> imageViewWeakRef : mUsedImagesWeakRefs) {
+                ImageView imageView = imageViewWeakRef.get();
+                if (imageView != null && imageView.getTag().equals(mUrl)) {
                     imageView.setImageBitmap(cachedBitmap);
                 }
             }
