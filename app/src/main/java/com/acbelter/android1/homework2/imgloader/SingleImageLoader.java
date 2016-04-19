@@ -142,10 +142,9 @@ public class SingleImageLoader implements ImageLoader {
             try {
                 Context context = mContextWeakRef.get();
                 if (context != null) {
-                    File file = new File(context.getCacheDir(), mUrl.replace("/", ""));;
-                    Bitmap bitmap;
-                    if (!file.exists()) {
-                        Log.d(TAG, "Load from net: " + mUrl);
+                    File file = new File(context.getCacheDir(), mUrl.replace("/", ""));
+                    Bitmap bitmap = decodeImageFromFile(file);
+                    if (bitmap == null) {
                         URL url = new URL(mUrl);
                         conn = (HttpURLConnection) url.openConnection();
                         if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
@@ -157,9 +156,6 @@ public class SingleImageLoader implements ImageLoader {
                         StreamUtils.copyStream(in, out);
                         out.close();
 
-                        bitmap = decodeImageFromFile(file);
-                    } else {
-                        Log.d(TAG, "Load from file: " + mUrl);
                         bitmap = decodeImageFromFile(file);
                     }
                     return bitmap;
@@ -185,7 +181,7 @@ public class SingleImageLoader implements ImageLoader {
                 options.inJustDecodeBounds = false;
                 return BitmapFactory.decodeStream(new FileInputStream(file), null, options);
             } catch (IOException e) {
-                Log.e(TAG, "IOException while decoding image from file", e);
+                // Ignore
             }
             return null;
         }

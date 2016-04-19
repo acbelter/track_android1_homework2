@@ -20,9 +20,7 @@ import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -32,7 +30,7 @@ public class MultipleImageLoader implements ImageLoader {
     private WeakReference<Context> mContextWeakRef;
     private LruCache<String, Bitmap> mMemoryCache;
     private ConcurrentHashMap<String, LoadImageTask> mTasksMap;
-    private Map<String, Set<ImageView>> mImageViewsMap;
+    private Set<ImageView> mUsedImages;
     private int mRequiredWidth;
     private int mRequiredHeight;
 
@@ -40,7 +38,7 @@ public class MultipleImageLoader implements ImageLoader {
         mImageStubResId = imageStubResId;
         mContextWeakRef = new WeakReference<>(context);
         mTasksMap = new ConcurrentHashMap<>();
-        mImageViewsMap = new HashMap<>();
+        mUsedImages = new HashSet<>();
         initMemoryCache();
     }
 
@@ -95,13 +93,8 @@ public class MultipleImageLoader implements ImageLoader {
 
     @Override
     public void loadImage(String url, ImageView imageView) {
-        if (mImageViewsMap.containsKey(url)) {
-            mImageViewsMap.get(url).add(imageView);
-        } else {
-            Set<ImageView> newValue = new LinkedHashSet<>();
-            newValue.add(imageView);
-            mImageViewsMap.put(url, newValue);
-        }
+        imageView.setTag(url);
+        mUsedImages.add(imageView);
 
         Bitmap cachedBitmap = getBitmapFromMemCache(url);
         if (cachedBitmap != null) {
@@ -143,19 +136,13 @@ public class MultipleImageLoader implements ImageLoader {
 
         @Override
         protected Bitmap doInBackground(Void... params) {
-            try {
-                Thread.sleep(1500);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
             HttpURLConnection conn = null;
             try {
                 Context context = mContextWeakRef.get();
                 if (context != null) {
                     File file = new File(context.getCacheDir(), mUrl.replace("/", ""));
-                    Bitmap bitmap;
-                    if (!file.exists()) {
-//                        Log.d(TAG, "Load from net: " + mUrl);
+                    Bitmap bitmap = decodeImageFromFile(file);
+                    if (bitmap == null) {
                         URL url = new URL(mUrl);
                         conn = (HttpURLConnection) url.openConnection();
                         if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
@@ -167,9 +154,6 @@ public class MultipleImageLoader implements ImageLoader {
                         StreamUtils.copyStream(in, out);
                         out.close();
 
-                        bitmap = decodeImageFromFile(file);
-                    } else {
-//                        Log.d(TAG, "Load from file: " + mUrl);
                         bitmap = decodeImageFromFile(file);
                     }
                     return bitmap;
@@ -195,7 +179,7 @@ public class MultipleImageLoader implements ImageLoader {
                 options.inJustDecodeBounds = false;
                 return BitmapFactory.decodeStream(new FileInputStream(file), null, options);
             } catch (IOException e) {
-                Log.e(TAG, "IOException while decoding image from file", e);
+                // Ignore
             }
             return null;
         }
@@ -213,9 +197,8 @@ public class MultipleImageLoader implements ImageLoader {
                 cachedBitmap = bitmap;
             }
 
-            Set<ImageView> imageViews = mImageViewsMap.get(mUrl);
-            for (ImageView imageView : imageViews) {
-                if (imageView != null) {
+            for (ImageView imageView : mUsedImages) {
+                if (imageView.getTag().equals(mUrl)) {
                     imageView.setImageBitmap(cachedBitmap);
                 }
             }
