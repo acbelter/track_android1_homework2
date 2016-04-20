@@ -162,7 +162,7 @@ public class SingleImageLoader implements ImageLoader {
                     return bitmap;
                 }
             } catch (IOException e) {
-                Log.e(TAG, "IOException while downloading image from network", e);
+                Log.d(TAG, "IOException while downloading image from network");
             } finally {
                 if (conn != null) {
                     conn.disconnect();

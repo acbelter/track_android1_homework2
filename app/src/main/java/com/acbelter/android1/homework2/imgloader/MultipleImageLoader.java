@@ -164,7 +164,7 @@ public class MultipleImageLoader implements ImageLoader {
                     return bitmap;
                 }
             } catch (IOException e) {
-                Log.e(TAG, "IOException while downloading image from network", e);
+                Log.d(TAG, "IOException while downloading image from network");
             } finally {
                 if (conn != null) {
                     conn.disconnect();
@@ -211,7 +211,11 @@ public class MultipleImageLoader implements ImageLoader {
             while (iterator.hasNext()) {
                 imageView = iterator.next().get();
                 if (imageView != null && imageView.getTag().equals(mUrl)) {
-                    imageView.setImageBitmap(cachedBitmap);
+                    if (cachedBitmap != null) {
+                        imageView.setImageBitmap(cachedBitmap);
+                    } else {
+                        imageView.setImageResource(mImageStubResId);
+                    }
                     iterator.remove();
                 }
             }
