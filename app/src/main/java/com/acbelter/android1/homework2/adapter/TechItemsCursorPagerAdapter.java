@@ -14,12 +14,12 @@ import com.acbelter.android1.homework2.TechItem;
 import com.acbelter.android1.homework2.imgloader.ImageLoader;
 import com.acbelter.android1.homework2.imgloader.MultipleImageLoader;
 
+@Deprecated
 public class TechItemsCursorPagerAdapter extends PagerAdapter {
     private ImageLoader mImageLoader;
     private Cursor mCursor;
     private LayoutInflater mInflater;
     private int mFullImageMargin;
-    private boolean mIsRequiredSizeChanged;
 
     public TechItemsCursorPagerAdapter(Context context, Cursor cursor) {
         mInflater = LayoutInflater.from(context);
@@ -48,11 +48,9 @@ public class TechItemsCursorPagerAdapter extends PagerAdapter {
         mCursor.moveToPosition(position);
         TechItem item = new TechItem(mCursor);
 
-        if (!mIsRequiredSizeChanged) {
-            int requiredSize = container.getMeasuredWidth() - 2 * mFullImageMargin;
-            mImageLoader.setRequiredSize(requiredSize, requiredSize);
-            mIsRequiredSizeChanged = true;
-        }
+        int requiredSize = container.getMeasuredWidth() - 2 * mFullImageMargin;
+        mImageLoader.setRequiredSize(requiredSize, requiredSize);
+
         mImageLoader.loadImage(item.getPictureUrl(), fullImage);
         title.setText(item.title);
         info.setText(item.info);

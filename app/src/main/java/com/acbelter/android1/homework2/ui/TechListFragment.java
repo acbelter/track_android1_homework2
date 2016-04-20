@@ -31,8 +31,6 @@ public class TechListFragment extends ListFragment {
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
         FragmentTransaction ft = getFragmentManager().beginTransaction();
-//        Cursor cursor = (Cursor) mTechItemsAdapter.getItem(position);
-//        int itemId = cursor.getInt(DbHelper.INDEX_ID);
         ft.replace(R.id.fragment_container, TechPagerFragment.newInstance(position), TechPagerFragment.tag());
         ft.addToBackStack(null);
         ft.commit();
