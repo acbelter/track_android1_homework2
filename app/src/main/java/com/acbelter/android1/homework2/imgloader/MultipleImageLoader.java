@@ -21,6 +21,7 @@ import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -99,6 +100,7 @@ public class MultipleImageLoader implements ImageLoader {
         Bitmap cachedBitmap = getBitmapFromMemCache(url);
         if (cachedBitmap != null) {
             imageView.setImageBitmap(cachedBitmap);
+            Log.d(TAG, "Load image from cache: " + url);
         } else {
             imageView.setImageResource(mImageStubResId);
             Context context = mContextWeakRef.get();
@@ -178,7 +180,11 @@ public class MultipleImageLoader implements ImageLoader {
                 options.inJustDecodeBounds = true;
                 BitmapFactory.decodeStream(in, null, options);
                 in.close();
-                options.inSampleSize = calculateInSampleSize(options, mRequiredWidth, mRequiredHeight);
+                if (mRequiredWidth == 0 || mRequiredHeight == 0) {
+                    options.inSampleSize = 1;
+                } else {
+                    options.inSampleSize = calculateInSampleSize(options, mRequiredWidth, mRequiredHeight);
+                }
                 options.inJustDecodeBounds = false;
                 return BitmapFactory.decodeStream(new FileInputStream(file), null, options);
             } catch (IOException e) {
@@ -200,10 +206,13 @@ public class MultipleImageLoader implements ImageLoader {
                 cachedBitmap = bitmap;
             }
 
-            for (WeakReference<ImageView> imageViewWeakRef : mUsedImagesWeakRefs) {
-                ImageView imageView = imageViewWeakRef.get();
+            Iterator<WeakReference<ImageView>> iterator = mUsedImagesWeakRefs.iterator();
+            ImageView imageView;
+            while (iterator.hasNext()) {
+                imageView = iterator.next().get();
                 if (imageView != null && imageView.getTag().equals(mUrl)) {
                     imageView.setImageBitmap(cachedBitmap);
+                    iterator.remove();
                 }
             }
         }

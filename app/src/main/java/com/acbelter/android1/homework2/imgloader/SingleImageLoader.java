@@ -24,6 +24,7 @@ import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+@Deprecated
 public class SingleImageLoader implements ImageLoader {
     private static final String TAG = SingleImageLoader.class.getSimpleName();
     private int mImageStubResId;
@@ -92,6 +93,7 @@ public class SingleImageLoader implements ImageLoader {
         Bitmap cachedBitmap = getBitmapFromMemCache(url);
         if (cachedBitmap != null) {
             imageView.setImageBitmap(cachedBitmap);
+            Log.d(TAG, "Load image from cache: " + url);
         } else {
             Context context = mContextWeakRef.get();
             if (context != null) {
@@ -176,7 +178,11 @@ public class SingleImageLoader implements ImageLoader {
                 options.inJustDecodeBounds = true;
                 BitmapFactory.decodeStream(in, null, options);
                 in.close();
-                options.inSampleSize = calculateInSampleSize(options, mRequiredWidth, mRequiredHeight);
+                if (mRequiredWidth == 0 || mRequiredHeight == 0) {
+                    options.inSampleSize = 1;
+                } else {
+                    options.inSampleSize = calculateInSampleSize(options, mRequiredWidth, mRequiredHeight);
+                }
                 options.inJustDecodeBounds = false;
                 return BitmapFactory.decodeStream(new FileInputStream(file), null, options);
             } catch (IOException e) {
