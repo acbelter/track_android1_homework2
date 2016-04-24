@@ -15,6 +15,7 @@ import com.acbelter.android1.homework2.db.DbHelper;
 
 public class TechPagerFragment extends Fragment {
     private int mStartPosition;
+    private Cursor mCursor;
     private ViewPager mPager;
 
     public static TechPagerFragment newInstance(int startPosition) {
@@ -27,6 +28,8 @@ public class TechPagerFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
+        DbHelper dbHelper = MainApplication.getDbHelper();
+        mCursor = dbHelper.getTechnologies();
     }
 
     @Override
@@ -39,12 +42,12 @@ public class TechPagerFragment extends Fragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        DbHelper dbHelper = MainApplication.getDbHelper();
-        Cursor cursor = dbHelper.getTechnologies();
         TechItemsCursorFragmentPagerAdapter pagerAdapter =
-                new TechItemsCursorFragmentPagerAdapter(getActivity(), getFragmentManager(), cursor);
+                new TechItemsCursorFragmentPagerAdapter(getActivity(), getChildFragmentManager(), mCursor);
         mPager.setAdapter(pagerAdapter);
-        mPager.setCurrentItem(mStartPosition);
+        if (savedInstanceState == null) {
+            mPager.setCurrentItem(mStartPosition);
+        }
     }
 
     public static String tag() {

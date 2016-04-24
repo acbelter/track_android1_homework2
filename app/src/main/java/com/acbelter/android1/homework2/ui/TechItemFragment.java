@@ -32,7 +32,8 @@ public class TechItemFragment extends Fragment {
         TextView info = (TextView) itemView.findViewById(R.id.info);
 
         int fullImageMargin = (int) getResources().getDimension(R.dimen.full_image_margin);
-        int requiredSize = container.getMeasuredWidth() - 2 * fullImageMargin;
+        int requiredSize = Math.min(container.getMeasuredWidth(),
+                container.getMeasuredHeight()) - 2 * fullImageMargin;
         mImageLoader.setRequiredSize(requiredSize, requiredSize);
 
         mImageLoader.loadImage(mItem.getPictureUrl(), fullImage);
