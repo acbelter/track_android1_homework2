@@ -25,6 +25,7 @@ import java.net.URL;
 import java.util.List;
 
 public class SplashActivity extends AppCompatActivity implements DataLoadingListener {
+    private static final long DEFAULT_SPLASH_LENGTH = 2000L;
     private LoadDataTask mLoadDataTask;
 
     @Override
@@ -84,6 +85,16 @@ public class SplashActivity extends AppCompatActivity implements DataLoadingList
 
         @Override
         protected Boolean doInBackground(Void... params) {
+            DbHelper dbHelper = MainApplication.getDbHelper();
+            if (dbHelper.hasTechnologies()) {
+                try {
+                    Thread.sleep(DEFAULT_SPLASH_LENGTH);
+                    return true;
+                } catch (InterruptedException e) {
+                    return true;
+                }
+            }
+
             HttpURLConnection conn = null;
             try {
                 URL url = new URL(Api.DATA_URL);
@@ -95,7 +106,6 @@ public class SplashActivity extends AppCompatActivity implements DataLoadingList
                 in.close();
 
                 List<TechItem> items = TechParser.parse(data);
-                DbHelper dbHelper = MainApplication.getDbHelper();
                 dbHelper.deleteTechnologies();
                 dbHelper.insertTechnologies(items);
 

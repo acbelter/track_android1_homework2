@@ -47,6 +47,15 @@ public class DbHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
+    public boolean hasTechnologies() {
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT count(*) FROM " + TABLE_TECHNOLOGY, null);
+        cursor.moveToFirst();
+        int count = cursor.getInt(0);
+        cursor.close();
+        return count > 0;
+    }
+
     public void insertTechnologies(List<TechItem> items) {
         SQLiteDatabase db = getWritableDatabase();
         for (TechItem item : items) {
