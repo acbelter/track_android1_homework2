@@ -86,15 +86,6 @@ public class SplashActivity extends AppCompatActivity implements DataLoadingList
         @Override
         protected Boolean doInBackground(Void... params) {
             DbHelper dbHelper = MainApplication.getDbHelper();
-            if (dbHelper.hasTechnologies()) {
-                try {
-                    Thread.sleep(DEFAULT_SPLASH_LENGTH);
-                    return true;
-                } catch (InterruptedException e) {
-                    return true;
-                }
-            }
-
             HttpURLConnection conn = null;
             try {
                 URL url = new URL(Api.DATA_URL);
@@ -112,14 +103,32 @@ public class SplashActivity extends AppCompatActivity implements DataLoadingList
                 return true;
             } catch (IOException e) {
                 e.printStackTrace();
+                if (attemptToLoadDataFromDb(dbHelper)) {
+                    return true;
+                }
                 mErrorResId = R.string.error_read;
             } catch (JSONException e) {
                 e.printStackTrace();
+                if (attemptToLoadDataFromDb(dbHelper)) {
+                    return true;
+                }
                 mErrorResId = R.string.error_parse;
             } finally {
                 if (conn != null) {
                     conn.disconnect();
                 }
+            }
+            return false;
+        }
+
+        private boolean attemptToLoadDataFromDb(DbHelper dbHelper) {
+            if (dbHelper.hasTechnologies()) {
+                try {
+                    Thread.sleep(DEFAULT_SPLASH_LENGTH);
+                } catch (InterruptedException e) {
+                    // Ignore
+                }
+                return true;
             }
             return false;
         }
