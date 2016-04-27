@@ -1,6 +1,9 @@
 package com.acbelter.android1.homework2.ui;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -38,7 +41,7 @@ public class SplashActivity extends AppCompatActivity implements DataLoadingList
     protected void onStart() {
         super.onStart();
         if (mLoadDataTask == null) {
-            mLoadDataTask = new LoadDataTask(this);
+            mLoadDataTask = new LoadDataTask(this, this);
             mLoadDataTask.execute();
         }
     }
@@ -76,18 +79,22 @@ public class SplashActivity extends AppCompatActivity implements DataLoadingList
 
 
     private static class LoadDataTask extends AsyncTask<Void, Void, Boolean> {
+        private WeakReference<Context> mContextWeakRef;
         private WeakReference<DataLoadingListener> mListenerWeakRef;
         private int mErrorResId = R.string.error_load;
 
-        LoadDataTask(DataLoadingListener listener) {
+        LoadDataTask(Context context, DataLoadingListener listener) {
+            mContextWeakRef = new WeakReference<>(context);
             mListenerWeakRef = new WeakReference<>(listener);
         }
 
         @Override
         protected Boolean doInBackground(Void... params) {
             DbHelper dbHelper = MainApplication.getDbHelper();
-            if (attemptToLoadDataFromDb(dbHelper)) {
-                return true;
+
+            Context context = mContextWeakRef.get();
+            if (context != null && !isNetworkAvailable(context)) {
+                return attemptToLoadDataFromDb(dbHelper);
             }
 
             HttpURLConnection conn = null;
@@ -123,6 +130,13 @@ public class SplashActivity extends AppCompatActivity implements DataLoadingList
                 }
             }
             return false;
+        }
+
+        private boolean isNetworkAvailable(Context context) {
+            ConnectivityManager connectivityManager =
+                    (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+            return networkInfo != null && networkInfo.isConnectedOrConnecting();
         }
 
         private boolean attemptToLoadDataFromDb(DbHelper dbHelper) {
