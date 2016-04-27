@@ -86,6 +86,10 @@ public class SplashActivity extends AppCompatActivity implements DataLoadingList
         @Override
         protected Boolean doInBackground(Void... params) {
             DbHelper dbHelper = MainApplication.getDbHelper();
+            if (attemptToLoadDataFromDb(dbHelper)) {
+                return true;
+            }
+
             HttpURLConnection conn = null;
             try {
                 URL url = new URL(Api.DATA_URL);
